@@ -1,2 +1,3 @@
-# seq-app-opsgenie
-Create Opsgenie alerts in response to events or notifications in Seq
+# Opsgenie alerting for Seq
+
+This project is currently under development.
