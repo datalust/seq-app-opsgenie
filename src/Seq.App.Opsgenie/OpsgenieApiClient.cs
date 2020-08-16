@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Seq.Apps;
 
 namespace Seq.App.Opsgenie
 {
@@ -35,8 +36,13 @@ namespace Seq.App.Opsgenie
 
             var response = await _httpClient.PostAsync(OpsgenieCreateAlertUrl, content);
 
-            // Any exception here will propagate back to the host and be surfaced in the app's diagnostic output.
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseBody = await response.Content.ReadAsStringAsync();
+                var fragment = responseBody.Substring(0, Math.Min(1024, responseBody.Length));
+                throw new SeqAppException(
+                    $"Opsgenie alert creation failed ({response.StatusCode}/{response.ReasonPhrase}): {fragment}");
+            }
         }
         
         public void Dispose()
