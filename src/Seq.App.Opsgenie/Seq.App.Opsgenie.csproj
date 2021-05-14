@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -12,6 +12,13 @@
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
         <TreatSpecificWarningsAsErrors />
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <AssemblyName>Seq.App.Opsgenie2</AssemblyName>
+        <Version>1.1.5</Version>
+        <AssemblyVersion>1.1.5.0</AssemblyVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageIcon>opsgenie.png</PackageIcon>
+        <ApplicationIcon>opsgenie.ico</ApplicationIcon>
+      <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
     
     <ItemGroup>
@@ -22,6 +29,11 @@
     
     <ItemGroup>
         <None Include="../../LICENSE" Pack="true" PackagePath="" />
+        <None Include="..\..\opsgenie.png">
+          <Pack>True</Pack>
+          <PackagePath></PackagePath>
+        </None>
+        <None Include="./bin/Release/$(TargetFramework)/*.dll" Exclude="./bin/Release/$(TargetFramework)/Seq.App.Opsgenie2.*;./bin/Release/$(TargetFramework)/Seq.Apps.dll;./bin/Release/$(TargetFramework)/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
         <None Include="./obj/publish/**/*" Exclude="./obj/publish/$(MSBuildProjectName).dll;./obj/publish/Seq.Apps.dll;./obj/publish/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
     </ItemGroup>
 </Project>

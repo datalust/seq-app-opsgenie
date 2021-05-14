@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Seq.App.Opsgenie
 {
     interface IOpsgenieApiClient
     {
-        Task CreateAsync(OpsgenieAlert alert);
+        Task<HttpResponseMessage> CreateAsync(OpsgenieAlert alert);
+        Task<HttpResponseMessage> CreateAsync(OpsgenieAlertWithResponders alert);
     }
 }
