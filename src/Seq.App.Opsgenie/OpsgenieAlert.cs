@@ -2,11 +2,19 @@
 
 namespace Seq.App.Opsgenie
 {
+    enum ResponderType
+    {
+        team,
+        user,
+        escalation,
+        schedule
+    }
+
     class Responders
     {
         public string Name { get; set; }
 
-        public string Type { get; set; }
+        public ResponderType Type { get; set; }
 
     }
 

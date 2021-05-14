@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 // ReSharper disable MemberCanBePrivate.Global, UnusedType.Global, UnusedAutoPropertyAccessor.Global
 
@@ -60,7 +61,7 @@ namespace Seq.App.Opsgenie
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Responders",
-            HelpText = "Responders for the alert - team names only, comma delimited")]
+            HelpText = "Responders for the alert - team name, or name=[team,user,escalation,schedule] - comma-delimited for multiple")]
         public string Responders { get; set; }
 
         [SeqAppSetting(
@@ -95,13 +96,29 @@ namespace Seq.App.Opsgenie
             if (!string.IsNullOrEmpty(EventPriority) && Regex.IsMatch(EventPriority, "(^P[1-5]$)", RegexOptions.IgnoreCase))
                 _priority = EventPriority;
 
-            List<Responders> responderList = new List<Responders>();            
+            List<Responders> responderList = new List<Responders>();
             if (!string.IsNullOrEmpty(Responders))
-                foreach (string responder in Responders.Split(','))
-                    responderList.Add(new Responders() { Name = responder, Type = "team" });
+                foreach (string responder in Responders.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()))
+                    if (responder.Contains("="))
+                    {
+                        string[] r = responder.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToArray();
+                        ResponderType responderType;
+                        if (Enum.TryParse(r[1], true, out responderType))
+                            responderList.Add(new Responders() { Name = r[0], Type = responderType });
+                        else
+                            Log.Debug("Cannot parse responder type: {Responder}", responder);
+                    }
+                    else
+                        responderList.Add(new Responders() { Name = responder, Type = ResponderType.team });
 
             _responders = responderList;
-            responder = JsonSerializer.Serialize(_responders);
+            responder = JsonSerializer.Serialize(_responders, new JsonSerializerOptions()
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                Converters = {
+                    new JsonStringEnumConverter()
+                }
+            });
 
             _tags = (Tags ?? "")
                 .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -127,16 +144,15 @@ namespace Seq.App.Opsgenie
 
             List<string> tagList = _tags.ToList<string>();
 
-            if (_includeTags)
-                if (evt.Data.Properties.ContainsKey(_includeTagProperty))
+            if (_includeTags && evt.Data.Properties.ContainsKey(_includeTagProperty))
                 {
                     var property = evt.Data.Properties[_includeTagProperty];
                     if (property.GetType().IsArray)
                         foreach (object p in (object[])property)
-                            if (!string.IsNullOrEmpty((string)p))
-                                tagList.Add((string)p);
-                    else
-                        tagList.AddRange(((string)property).Split(',').ToList<string>());
+                            if (!string.IsNullOrEmpty((string)p) && !tagList.Contains((string)p, StringComparer.CurrentCultureIgnoreCase))
+                                tagList.Add(((string)p).Trim());
+                            else if (!string.IsNullOrEmpty((string)p) && !tagList.Contains((string)p, StringComparer.CurrentCultureIgnoreCase))
+                                tagList.AddRange(((string)property).Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()));
                 }
 
             try
