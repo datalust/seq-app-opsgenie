@@ -6,6 +6,7 @@ using Seq.Apps.LogEvents;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.Json;
 
 // ReSharper disable MemberCanBePrivate.Global, UnusedType.Global, UnusedAutoPropertyAccessor.Global
 
@@ -18,6 +19,7 @@ namespace Seq.App.Opsgenie
         HandlebarsTemplate _generateMessage, _generateDescription;
         string _priority;
         List<Responders> _responders;
+        string responder;
         string[] _tags;
 
         bool _includeTags;
@@ -54,6 +56,7 @@ namespace Seq.App.Opsgenie
             HelpText = "Priority for the alert - P1, P2, P3, P4, P5")]
         public string EventPriority { get; set; }
 
+        //TODO - We could optionally accept name=type to allow user, escalation, and schedule to be specified
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Responders",
@@ -75,7 +78,7 @@ namespace Seq.App.Opsgenie
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Event tag property",
-            HelpText = "The property that contains tags to include from events- defaults to 'Tag', only used if Include Event tags is enabled.")]
+            HelpText = "The property that contains tags to include from events- defaults to 'Tags', only used if Include Event tags is enabled.")]
         public string AddEventProperty { get; set; }
 
         protected override void OnAttached()
@@ -95,9 +98,10 @@ namespace Seq.App.Opsgenie
             List<Responders> responderList = new List<Responders>();            
             if (!string.IsNullOrEmpty(Responders))
                 foreach (string responder in Responders.Split(','))
-                    responderList.Add(new Responders() { Name = responder, Type = "Team" });
+                    responderList.Add(new Responders() { Name = responder, Type = "team" });
 
             _responders = responderList;
+            responder = JsonSerializer.Serialize(_responders);
 
             _tags = (Tags ?? "")
                 .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -129,18 +133,27 @@ namespace Seq.App.Opsgenie
                     var property = evt.Data.Properties[_includeTagProperty];
                     if (property.GetType().IsArray)
                         foreach (object p in (object[])property)
-                            tagList.Add((string)p);
+                            if (!string.IsNullOrEmpty((string)p))
+                                tagList.Add((string)p);
                     else
                         tagList.AddRange(((string)property).Split(',').ToList<string>());
                 }
 
-                        
             try
             {
+                
                 Log.Debug("Send Alert to OpsGenie: Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", _generateMessage.Render(evt), _generateDescription.Render(evt),
-                    _priority, _responders.ToArray(), _tags.ToArray());
+                    _priority, responder, tagList.ToArray());
 
-                //TODO - responders still needs work
+                Log.Debug("OpsGenie API call: {JsonCall}", JsonSerializer.Serialize(new OpsgenieAlertWithResponders(
+                        _generateMessage.Render(evt),
+                        evt.Id,
+                        _generateDescription.Render(evt),
+                        _priority,
+                        _responders,
+                        Host.BaseUri,
+                        tagList.ToArray()), new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+
                 HttpResponseMessage result;
                 if (_responders.Count > 0)
                     result = await ApiClient.CreateAsync(new OpsgenieAlertWithResponders(
@@ -150,7 +163,7 @@ namespace Seq.App.Opsgenie
                         _priority,
                         _responders,
                         Host.BaseUri,
-                        _tags.ToArray()));
+                        tagList.ToArray()));
                 else
                     result = await ApiClient.CreateAsync(new OpsgenieAlert(
                         _generateMessage.Render(evt),
@@ -158,16 +171,16 @@ namespace Seq.App.Opsgenie
                         _generateDescription.Render(evt),
                         _priority,
                         Host.BaseUri,
-                        _tags.ToArray()));
+                        tagList.ToArray()));
 
                 Log.Debug("OpsGenie Result: Result {Result}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", result.StatusCode, _generateMessage.Render(evt), _generateDescription.Render(evt),
-                    _priority, _responders.ToArray(), _tags.ToArray());
+                    _priority, responder, tagList.ToArray());
             }
 
             catch (Exception ex)
             {
                 Log.Error(ex, "OpsGenie Result: Result {Error}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", ex.Message, _generateMessage.Render(evt), _generateDescription.Render(evt),
-                    _priority, _responders.ToArray(), _tags.ToArray());
+                    _priority, responder, _tags.ToArray());
             }
         }
 
