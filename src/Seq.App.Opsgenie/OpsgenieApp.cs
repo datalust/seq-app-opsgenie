@@ -209,7 +209,7 @@ namespace Seq.App.Opsgenie
             {
                 //Log an error which could be fired to another app (eg. alert via email of an OpsGenie alert failure, or raise a Jira) and include details of the alert
                 Log.Error(ex, "OpsGenie Result: Result {Error}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", ex.Message, _generateMessage.Render(evt), _generateDescription.Render(evt),
-                    _priority, responder, _tags.ToArray());
+                    _priority, responder, tagList.ToArray());
             }
         }
 
