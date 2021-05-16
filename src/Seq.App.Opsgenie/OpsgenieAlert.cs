@@ -18,7 +18,7 @@ namespace Seq.App.Opsgenie
 
     }
 
-    class OpsgenieAlertWithResponders
+    class OpsgenieAlert
     {
         public string Message { get; }
         public string Alias { get; }
@@ -28,7 +28,7 @@ namespace Seq.App.Opsgenie
         public string Source { get; }
         public string[] Tags { get; }
 
-        public OpsgenieAlertWithResponders(
+        public OpsgenieAlert(
             string message,
             string alias,
             string description,
@@ -47,29 +47,5 @@ namespace Seq.App.Opsgenie
         }
     }
 
-    class OpsgenieAlert
-    {
-        public string Message { get; }
-        public string Alias { get; }
-        public string Description { get; }
-        public string Priority { get; }
-        public string Source { get; }
-        public string[] Tags { get; }
-
-        public OpsgenieAlert(
-            string message,
-            string alias,
-            string description,
-            string priority,
-            string source,
-            string[] tags)
-        {
-            Message = message;
-            Alias = alias;
-            Description = description;
-            Priority = priority;
-            Source = source;
-            Tags = tags;
-        }
-    }
+    
 }

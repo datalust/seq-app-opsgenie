@@ -166,7 +166,7 @@ namespace Seq.App.Opsgenie
                     _priority, responder, tagList.ToArray());
 
                 //Logging the API call helps with debugging "why" an alert did not fire or was rejected by OpsGenie API
-                Log.Debug("OpsGenie API call: {JsonCall}", JsonSerializer.Serialize(new OpsgenieAlertWithResponders(
+                Log.Debug("OpsGenie API call: {JsonCall}", JsonSerializer.Serialize(new OpsgenieAlert(
                         _generateMessage.Render(evt),
                         evt.Id,
                         _generateDescription.Render(evt),
@@ -182,8 +182,7 @@ namespace Seq.App.Opsgenie
                         }));
 
                 HttpResponseMessage result;
-                if (_responders.Count > 0)
-                    result = await ApiClient.CreateAsync(new OpsgenieAlertWithResponders(
+                    result = await ApiClient.CreateAsync(new OpsgenieAlert(
                         _generateMessage.Render(evt),
                         evt.Id,
                         _generateDescription.Render(evt),
@@ -191,24 +190,16 @@ namespace Seq.App.Opsgenie
                         _responders,
                         Host.BaseUri,
                         tagList.ToArray()));
-                else
-                    result = await ApiClient.CreateAsync(new OpsgenieAlert(
-                        _generateMessage.Render(evt),
-                        evt.Id,
-                        _generateDescription.Render(evt),
-                        _priority,
-                        Host.BaseUri,
-                        tagList.ToArray()));
 
                 //Log the result with details that could be re-fired to another app if needed
-                Log.Debug("OpsGenie Result: Result {Result}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", result.StatusCode, _generateMessage.Render(evt), _generateDescription.Render(evt),
+                Log.Debug("OpsGenie Result: Result {Result}/{Reason}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", result.StatusCode, result.ReasonPhrase, _generateMessage.Render(evt), _generateDescription.Render(evt),
                     _priority, responder, tagList.ToArray());
             }
 
             catch (Exception ex)
             {
                 //Log an error which could be fired to another app (eg. alert via email of an OpsGenie alert failure, or raise a Jira) and include details of the alert
-                Log.Error(ex, "OpsGenie Result: Result {Error}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", ex.Message, _generateMessage.Render(evt), _generateDescription.Render(evt),
+                Log.Error(ex, "OpsGenie Exception: Result {Result}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", ex.Message, _generateMessage.Render(evt), _generateDescription.Render(evt),
                     _priority, responder, tagList.ToArray());
             }
         }

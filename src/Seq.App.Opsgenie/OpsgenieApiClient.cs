@@ -51,28 +51,6 @@ namespace Seq.App.Opsgenie
             return response;
         }
 
-        public async Task<HttpResponseMessage> CreateAsync(OpsgenieAlertWithResponders alert)
-        {
-            if (alert == null) throw new ArgumentNullException(nameof(alert));
-
-            var content = new StringContent(
-                JsonSerializer.Serialize(alert, _serializerOptions),
-                _utf8Encoding,
-                "application/json");
-
-            HttpResponseMessage response = await _httpClient.PostAsync(OpsgenieCreateAlertUrl, content);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var responseBody = await response.Content.ReadAsStringAsync();
-                var fragment = responseBody.Substring(0, Math.Min(1024, responseBody.Length));
-                throw new SeqAppException(
-                    $"Opsgenie alert creation failed ({response.StatusCode}/{response.ReasonPhrase}): {fragment}");
-            }
-
-            return response;
-        }
-
         public void Dispose()
         {
             _httpClient.Dispose();

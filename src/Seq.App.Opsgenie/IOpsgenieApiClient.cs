@@ -6,6 +6,5 @@ namespace Seq.App.Opsgenie
     interface IOpsgenieApiClient
     {
         Task<HttpResponseMessage> CreateAsync(OpsgenieAlert alert);
-        Task<HttpResponseMessage> CreateAsync(OpsgenieAlertWithResponders alert);
     }
 }
