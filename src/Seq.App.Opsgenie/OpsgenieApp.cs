@@ -57,25 +57,28 @@ namespace Seq.App.Opsgenie
             HelpText = "Priority for the alert - P1, P2, P3, P4, P5")]
         public string EventPriority { get; set; }
 
-        //TODO - We could optionally accept name=type to allow user, escalation, and schedule to be specified
+        //Defaults to team if only name is specified, but we also optionally accept name=type to allow user, escalation, and schedule to be specified
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Responders",
             HelpText = "Responders for the alert - team name, or name=[team,user,escalation,schedule] - comma-delimited for multiple")]
         public string Responders { get; set; }
 
+        //Static list of tags
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Alert tags",
             HelpText = "Tags for the alert, separated by commas.")]
         public string Tags { get; set; }
 
+        //Optionally allow dynamic tags from an event property
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Include Event tags",
             HelpText = "Include tags from from an event property - comma-delimited or array accepted. Will append to existing tags.")]
         public bool AddEventTags { get; set; }
 
+        //The property containing tags that can be added dynamically during runtime
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Event tag property",
@@ -158,9 +161,11 @@ namespace Seq.App.Opsgenie
             try
             {
                 
+                //Log our intent to alert OpsGenie with details that could be re-fired to another app if needed
                 Log.Debug("Send Alert to OpsGenie: Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", _generateMessage.Render(evt), _generateDescription.Render(evt),
                     _priority, responder, tagList.ToArray());
 
+                //Logging the API call helps with debugging "why" an alert did not fire or was rejected by OpsGenie API
                 Log.Debug("OpsGenie API call: {JsonCall}", JsonSerializer.Serialize(new OpsgenieAlertWithResponders(
                         _generateMessage.Render(evt),
                         evt.Id,
@@ -168,7 +173,13 @@ namespace Seq.App.Opsgenie
                         _priority,
                         _responders,
                         Host.BaseUri,
-                        tagList.ToArray()), new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+                        tagList.ToArray()), new JsonSerializerOptions()
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                            Converters = {
+                                new JsonStringEnumConverter()
+                            }
+                        }));
 
                 HttpResponseMessage result;
                 if (_responders.Count > 0)
@@ -189,12 +200,14 @@ namespace Seq.App.Opsgenie
                         Host.BaseUri,
                         tagList.ToArray()));
 
+                //Log the result with details that could be re-fired to another app if needed
                 Log.Debug("OpsGenie Result: Result {Result}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", result.StatusCode, _generateMessage.Render(evt), _generateDescription.Render(evt),
                     _priority, responder, tagList.ToArray());
             }
 
             catch (Exception ex)
             {
+                //Log an error which could be fired to another app (eg. alert via email of an OpsGenie alert failure, or raise a Jira) and include details of the alert
                 Log.Error(ex, "OpsGenie Result: Result {Error}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", ex.Message, _generateMessage.Render(evt), _generateDescription.Render(evt),
                     _priority, responder, _tags.ToArray());
             }

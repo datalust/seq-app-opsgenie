@@ -13,8 +13,8 @@
         <TreatSpecificWarningsAsErrors />
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <AssemblyName>Seq.App.Opsgenie2</AssemblyName>
-        <Version>1.1.14</Version>
-        <AssemblyVersion>1.1.14.0</AssemblyVersion>
+        <Version>1.1.15</Version>
+        <AssemblyVersion>1.1.15.0</AssemblyVersion>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageIcon>opsgenie.png</PackageIcon>
         <ApplicationIcon>opsgenie.ico</ApplicationIcon>
