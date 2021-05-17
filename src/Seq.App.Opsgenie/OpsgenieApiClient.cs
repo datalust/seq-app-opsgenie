@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,16 +13,26 @@ namespace Seq.App.Opsgenie
     class OpsgenieApiClient : IOpsgenieApiClient, IDisposable
     {
         const string OpsgenieCreateAlertUrl = "https://api.opsgenie.com/v2/alerts";
-
         readonly HttpClient _httpClient = new HttpClient();
         readonly Encoding _utf8Encoding = new UTF8Encoding(false);
-        readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions
+        static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            Converters ={
-                new JsonStringEnumConverter()
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
             }
         };
+
+        public static string Serialize(IEnumerable list)
+        {
+            return JsonSerializer.Serialize(list, _serializerOptions);
+        }
+
+        public static string Serialize(OpsgenieAlert alert)
+        {
+            return JsonSerializer.Serialize(alert, _serializerOptions);
+        }
 
         public OpsgenieApiClient(string apiKey)
         {
@@ -38,7 +49,7 @@ namespace Seq.App.Opsgenie
                 _utf8Encoding,
                 "application/json");
 
-            HttpResponseMessage response = await _httpClient.PostAsync(OpsgenieCreateAlertUrl, content);
+            var response = await _httpClient.PostAsync(OpsgenieCreateAlertUrl, content);
 
             if (!response.IsSuccessStatusCode)
             {

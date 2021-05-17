@@ -2,21 +2,6 @@
 
 namespace Seq.App.Opsgenie
 {
-    enum ResponderType
-    {
-        team,
-        user,
-        escalation,
-        schedule
-    }
-
-    class Responders
-    {
-        public string Name { get; set; }
-
-        public ResponderType Type { get; set; }
-
-    }
 
     class OpsgenieAlert
     {
@@ -45,7 +30,5 @@ namespace Seq.App.Opsgenie
             Source = source;
             Tags = tags;
         }
-    }
-
-    
+    }    
 }
