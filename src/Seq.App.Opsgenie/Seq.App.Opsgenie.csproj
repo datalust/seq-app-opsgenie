@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
@@ -12,6 +12,11 @@
         <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
         <TreatSpecificWarningsAsErrors />
         <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <AssemblyName>Seq.App.Opsgenie</AssemblyName>
+        <PackageIcon>opsgenie.png</PackageIcon>
+        <ApplicationIcon>opsgenie.ico</ApplicationIcon>
+      <PackageId>Seq.App.Opsgenie</PackageId>
+      <Product>Seq.App.Opsgenie2</Product>
     </PropertyGroup>
     
     <ItemGroup>
@@ -22,6 +27,7 @@
     
     <ItemGroup>
         <None Include="../../LICENSE" Pack="true" PackagePath="" />
+        <None Include="..\..\opsgenie.png" Pack="true" PackagePath="" />
         <None Include="./obj/publish/**/*" Exclude="./obj/publish/$(MSBuildProjectName).dll;./obj/publish/Seq.Apps.dll;./obj/publish/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
     </ItemGroup>
 </Project>
