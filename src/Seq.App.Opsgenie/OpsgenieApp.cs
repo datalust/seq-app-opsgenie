@@ -115,7 +115,9 @@ namespace Seq.App.Opsgenie
 
             _priorityProperty = "@Level";
             if (!string.IsNullOrEmpty(PriorityProperty))
+            {
                 _priorityProperty = PriorityProperty;
+            }
 
             _priority = Priority.P3;
             _defaultPriority = Priority.P3;
@@ -210,7 +212,9 @@ namespace Seq.App.Opsgenie
             _includeTags = AddEventTags;
             _includeTagProperty = "Tags";
             if (!string.IsNullOrEmpty(AddEventProperty))
+            {
                 _includeTagProperty = AddEventProperty;
+            }
 
             if (ApiClient == null)
             {
@@ -342,7 +346,9 @@ namespace Seq.App.Opsgenie
             try
             {
                 if (!_isResponderMapping)
+                {
                     responderList = _responders;
+                }
 
 
                 //Log our intent to alert OpsGenie with details that could be re-fired to another app if needed
