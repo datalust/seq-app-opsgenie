@@ -72,7 +72,7 @@ namespace Seq.App.Opsgenie
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Responder Property",
-            HelpText = "Optional property to read for responder; properties can be mapped to responder type using the Responders or Property Mapping field")]
+            HelpText = "Optional property to read for responder; properties can be mapped to responder type using the Responders or Property Mapping field.")]
         public string ResponderProperty { get; set; }
 
         //Defaults to team if only name is specified, but we also optionally accept name=type to allow user, escalation, and schedule to be specified
