@@ -11,7 +11,7 @@ namespace Seq.App.Opsgenie
         public string Alias { get; }
         public string Description { get; }
         public string Priority { get; }
-        public List<Responders> Responders { get; }
+        public List<Responder> Responders { get; }
         public string Source { get; }
         public string[] Tags { get; }
 
@@ -20,7 +20,7 @@ namespace Seq.App.Opsgenie
             string alias,
             string description,
             string priority,
-            List<Responders> responders,
+            List<Responder> responders,
             string source,
             string[] tags)
         {

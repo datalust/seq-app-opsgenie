@@ -17,7 +17,8 @@ namespace Seq.App.Opsgenie
         {
             if (template == null) throw new ArgumentNullException(nameof(template));
             _host = host ?? throw new ArgumentNullException(nameof(host));
-            _template = Handlebars.Compile(template);
+            var compiled = Handlebars.Compile(template);
+            _template = o => compiled(o);
         }
 
         public string Render(Event<LogEventData> evt)
