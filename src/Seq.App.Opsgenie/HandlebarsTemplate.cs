@@ -42,7 +42,8 @@ namespace Seq.App.Opsgenie
                 { "$Properties",          properties },
                 { "$EventType",           "$" + evt.EventType.ToString("X8") },
                 { "$Instance",            host.InstanceName },
-                { "$ServerUri",           host.BaseUri }
+                { "$ServerUri",           host.BaseUri },
+                { "$EventUri",            string.Concat(host.BaseUri, "#/events?filter=@Id%20%3D%20'", evt.Id, "'&amp;show=expanded") } 
             });
 
             foreach (var property in properties)
