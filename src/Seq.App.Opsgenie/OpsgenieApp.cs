@@ -16,14 +16,13 @@ namespace Seq.App.Opsgenie
         IDisposable _disposeClient;
         HandlebarsTemplate _generateMessage, _generateDescription;
         string _priorityProperty;
-        bool _isPriorityMapping = false;
-        Priority _priority;
-        Priority _defaultPriority;
-        List<Priorities> _priorities;
+        bool _isPriorityMapping;
+        Priority _priority = Priority.P3, _defaultPriority = Priority.P3;
+        Dictionary<string, Priority> _priorities = new Dictionary<string, Priority>(StringComparer.OrdinalIgnoreCase);
         string _responderProperty;
-        bool _isResponderMapping = false;
+        bool _isResponderMapping;
         List<Responders> _responders;
-        string responder;
+        string _responder;
         string[] _tags;
         bool _includeTags;
         string _includeTagProperty;
@@ -119,10 +118,6 @@ namespace Seq.App.Opsgenie
                 _priorityProperty = PriorityProperty;
             }
 
-            _priority = Priority.P3;
-            _defaultPriority = Priority.P3;
-            _priorities = new List<Priorities>();
-
             if (!string.IsNullOrEmpty(DefaultPriority) && Regex.IsMatch(DefaultPriority, "(^P[1-5]$)", RegexOptions.IgnoreCase))
             {
                 var priorityType = Priority.P3;
@@ -135,12 +130,11 @@ namespace Seq.App.Opsgenie
             if (!string.IsNullOrEmpty(EventPriority) && EventPriority.Contains("="))
             {
                 _isPriorityMapping = true;
-                var priorityList = new List<Priorities>();
                 var p = EventPriority.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToArray();
                 var priorityType = Priority.P3;
                 if (Enum.TryParse(p[1], true, out priorityType))
                 {
-                    priorityList.Add(new Priorities() { Name = p[0], Priority = priorityType });
+                    _priorities.Add(p[0], priorityType);
                 }
                 else
                 {
@@ -149,8 +143,6 @@ namespace Seq.App.Opsgenie
                     _priority = _defaultPriority;
                     _isPriorityMapping = false;
                 }
-
-                _priorities = priorityList;
             }
             else
             {
@@ -202,7 +194,7 @@ namespace Seq.App.Opsgenie
             }
 
             _responders = responderList;
-            responder = OpsgenieApiClient.Serialize(_responders);
+            _responder = OpsgenieApiClient.Serialize(_responders);
 
             _tags = (Tags ?? "")
                 .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
@@ -238,17 +230,11 @@ namespace Seq.App.Opsgenie
                 bool matchPriority = false;
                 bool matchResponder = false;                
 
-                if (_isPriorityMapping && _priorityProperty.Equals("@Level", StringComparison.OrdinalIgnoreCase))
+                if (_isPriorityMapping && _priorityProperty.Equals("@Level", StringComparison.OrdinalIgnoreCase) &&
+                    _priorities.TryGetValue(evt.Data.Level.ToString(), out var matched))
                 {
-                    foreach (Priorities p in _priorities)
-                    {
-                        if ((evt.Data.Level.ToString()).Equals(p.Name, StringComparison.OrdinalIgnoreCase))
-                        {
-                            matchPriority = true;
-                            _priority = p.Priority;
-                            break;
-                        }
-                    }
+                    matchPriority = true;
+                    _priority = matched;
                 }
 
                 //Case insensitive property name match
@@ -286,18 +272,13 @@ namespace Seq.App.Opsgenie
                     }
 
                     //Match the Priority property if configured
-                    if (_isPriorityMapping && !matchPriority && property.Key.Equals(_priorityProperty, StringComparison.OrdinalIgnoreCase))
+                    if (_isPriorityMapping && !matchPriority && property.Key.Equals(_priorityProperty, StringComparison.OrdinalIgnoreCase) &&
+                        evt.Data.Properties.TryGetValue(_priorityProperty, out var priorityProperty) &&
+                        priorityProperty is string priorityValue &&
+                        _priorities.TryGetValue(priorityValue, out var matchedPriority))
                     {
-                        var priority = evt.Data.Properties[_includeTagProperty];
-                        foreach (Priorities p in _priorities)
-                        {
-                            if (((string)priority).Equals(p.Name, StringComparison.OrdinalIgnoreCase))
-                            {
-                                matchPriority = true;
-                                _priority = p.Priority;
-                                break;
-                            }
-                        }
+                        matchPriority = true;
+                        _priority = matchedPriority;
 
                         //Exit loop if the other match iterations are satisfied
                         if (matchPriority &&
@@ -353,7 +334,7 @@ namespace Seq.App.Opsgenie
 
                 //Log our intent to alert OpsGenie with details that could be re-fired to another app if needed
                 Log.Debug("Send Alert to OpsGenie: Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", _generateMessage.Render(evt), _generateDescription.Render(evt),
-                    _priority, responder, tagList.ToArray());
+                    _priority, _responder, tagList.ToArray());
 
                 //Logging the API call helps with debugging "why" an alert did not fire or was rejected by OpsGenie API
                 Log.Debug("OpsGenie API call: {JsonCall}", OpsgenieApiClient.Serialize(new OpsgenieAlert(_generateMessage.Render(evt),
@@ -375,14 +356,14 @@ namespace Seq.App.Opsgenie
 
                 //Log the result with details that could be re-fired to another app if needed
                 Log.Debug("OpsGenie Result: Result {Result}/{Reason}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", result.StatusCode, result.ReasonPhrase, 
-                    _generateMessage.Render(evt), _generateDescription.Render(evt), _priority, responder, tagList.ToArray());
+                    _generateMessage.Render(evt), _generateDescription.Render(evt), _priority, _responder, tagList.ToArray());
             }
 
             catch (Exception ex)
             {
                 //Log an error which could be fired to another app (eg. alert via email of an OpsGenie alert failure, or raise a Jira) and include details of the alert
                 Log.Error(ex, "OpsGenie Exception: Result {Result}, Message {Message}, Description {Description}, Priority {Priority}, Responders {Responders}, Tags {Tags}", ex.Message, _generateMessage.Render(evt), _generateDescription.Render(evt),
-                    _priority, responder, tagList.ToArray());
+                    _priority, _responder, tagList.ToArray());
             }
         }
 

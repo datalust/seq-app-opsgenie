@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿// Values of this type are populated from user-provided configuration.
+// ReSharper disable UnusedMember.Global
 
 namespace Seq.App.Opsgenie
 {
@@ -11,10 +10,5 @@ namespace Seq.App.Opsgenie
         P3 = 3,
         P4 = 4,
         P5 = 5
-    }
-    public class Priorities
-    {
-        public string Name;
-        public Priority Priority;
     }
 }

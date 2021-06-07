@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 
+// Properties on this type are serialized into the JSON payload sent to OpsGenie.
+// ReSharper disable MemberCanBePrivate.Global, UnusedAutoPropertyAccessor.Global
+
 namespace Seq.App.Opsgenie
 {
-
     class OpsgenieAlert
     {
         public string Message { get; }

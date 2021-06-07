@@ -15,7 +15,7 @@ namespace Seq.App.Opsgenie
         const string OpsgenieCreateAlertUrl = "https://api.opsgenie.com/v2/alerts";
         readonly HttpClient _httpClient = new HttpClient();
         readonly Encoding _utf8Encoding = new UTF8Encoding(false);
-        static readonly JsonSerializerOptions _serializerOptions = new JsonSerializerOptions
+        static readonly JsonSerializerOptions SerializerOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             Converters =
@@ -26,12 +26,12 @@ namespace Seq.App.Opsgenie
 
         public static string Serialize(IEnumerable list)
         {
-            return JsonSerializer.Serialize(list, _serializerOptions);
+            return JsonSerializer.Serialize(list, SerializerOptions);
         }
 
         public static string Serialize(OpsgenieAlert alert)
         {
-            return JsonSerializer.Serialize(alert, _serializerOptions);
+            return JsonSerializer.Serialize(alert, SerializerOptions);
         }
 
         public OpsgenieApiClient(string apiKey)
@@ -45,7 +45,7 @@ namespace Seq.App.Opsgenie
             if (alert == null) throw new ArgumentNullException(nameof(alert));
 
             var content = new StringContent(
-                JsonSerializer.Serialize(alert, _serializerOptions),
+                JsonSerializer.Serialize(alert, SerializerOptions),
                 _utf8Encoding,
                 "application/json");
 
