@@ -236,21 +236,42 @@ namespace Seq.App.Opsgenie
         {
             _disposeClient?.Dispose();
         }
-        
-        List<Responder> ComputeResponders(Event<LogEventData> evt)
+
+        private List<Responder> ComputeResponders(Event<LogEventData> evt)
         {
             if (!_isResponderMapping)
                 return _responders;
 
             var result = new List<Responder>();
-            
+
             //Match the Responder property if configured
-            if (TryGetPropertyValueCI(evt.Data.Properties, _responderProperty, out var responderValue) && responderValue is string responder)
+            if (!TryGetPropertyValueCI(evt.Data.Properties, _responderProperty, out var responderValue)) return result;
+            switch (responderValue)
             {
-                var matched = _responders.FirstOrDefault(p => responder.Equals(p.Name, StringComparison.OrdinalIgnoreCase) || responder.Equals(p.Username, StringComparison.OrdinalIgnoreCase));
-                if (matched != null)
+                case object[] responderArr:
+                    result.AddRange(responderArr.Select(r =>
+                            _responders.FirstOrDefault(p =>
+                                ((string) r).Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
+                                ((string) r).Equals(p.Username, StringComparison.OrdinalIgnoreCase)))
+                        .Where(matched => matched != null));
+                    break;
+                case string responder when responder.Contains(","):
+                    result.AddRange(
+                        from r in responder.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(t => t.Trim()).ToArray()
+                        from p in _responders
+                        where r.Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
+                              r.Equals((p.Username, StringComparison.OrdinalIgnoreCase))
+                        select p);
+                    break;
+                case string responder:
                 {
-                    result.Add(matched);
+                    var matched = _responders.FirstOrDefault(p =>
+                        responder.Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
+                        responder.Equals(p.Username, StringComparison.OrdinalIgnoreCase));
+                    if (matched != null) result.Add(matched);
+
+                    break;
                 }
             }
 
