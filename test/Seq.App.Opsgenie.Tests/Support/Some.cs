@@ -24,7 +24,12 @@ namespace Seq.App.Opsgenie.Tests.Support
             return Uint();
         }
 
-        public static Event<LogEventData> LogEvent(IDictionary<string, object> includedProperties = null)
+        public abstract class ParametersMustBeNamed { }
+        
+        public static Event<LogEventData> LogEvent(
+            ParametersMustBeNamed _ = null,
+            LogEventLevel level = LogEventLevel.Fatal,
+            IDictionary<string, object> include = null)
         {
             var id = EventId();
             var timestamp = UtcTimestamp();
@@ -34,9 +39,9 @@ namespace Seq.App.Opsgenie.Tests.Support
                 {"Number", 42}
             };
 
-            if (includedProperties != null)
+            if (include != null)
             {
-                foreach (var includedProperty in includedProperties)
+                foreach (var includedProperty in include)
                 {
                     properties.Add(includedProperty.Key, includedProperty.Value);
                 }
@@ -46,7 +51,7 @@ namespace Seq.App.Opsgenie.Tests.Support
             {
                 Exception = null,
                 Id = id,
-                Level = LogEventLevel.Fatal,
+                Level = level,
                 LocalTimestamp = new DateTimeOffset(timestamp),
                 MessageTemplate = "Hello, {Who}",
                 RenderedMessage = "Hello, world",

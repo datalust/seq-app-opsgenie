@@ -17,7 +17,8 @@ namespace Seq.App.Opsgenie
         {
             if (template == null) throw new ArgumentNullException(nameof(template));
             _host = host ?? throw new ArgumentNullException(nameof(host));
-            _template = Handlebars.Compile(template);
+            var compiled = Handlebars.Compile(template);
+            _template = o => compiled(o);
         }
 
         public string Render(Event<LogEventData> evt)
@@ -43,6 +44,7 @@ namespace Seq.App.Opsgenie
                 { "$EventType",           "$" + evt.EventType.ToString("X8") },
                 { "$Instance",            host.InstanceName },
                 { "$ServerUri",           host.BaseUri },
+                // Note, this will only be valid when events are streamed directly to the app, and not when the app is sending an alert notification.
                 { "$EventUri",            string.Concat(host.BaseUri, "#/events?filter=@Id%20%3D%20'", evt.Id, "'&amp;show=expanded") } 
             });
 
