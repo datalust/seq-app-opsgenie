@@ -155,7 +155,9 @@ namespace Seq.App.Opsgenie
                         var r = responder.Split(new[] { '=' }, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()).ToArray();
                         if (Enum.TryParse(r[1], true, out ResponderType responderType))
                         {
-                            _responders.Add(new Responder { Name = r[0], Type = responderType });
+                            _responders.Add(responderType == ResponderType.User
+                                ? new Responder {Username = r[0], Type = responderType}
+                                : new Responder {Name = r[0], Type = responderType});
                         }
                         else
                         {
@@ -245,7 +247,7 @@ namespace Seq.App.Opsgenie
             //Match the Responder property if configured
             if (TryGetPropertyValueCI(evt.Data.Properties, _responderProperty, out var responderValue) && responderValue is string responder)
             {
-                var matched = _responders.FirstOrDefault(p => responder.Equals(p.Name, StringComparison.OrdinalIgnoreCase));
+                var matched = _responders.FirstOrDefault(p => responder.Equals(p.Name, StringComparison.OrdinalIgnoreCase) || responder.Equals(p.Username, StringComparison.OrdinalIgnoreCase));
                 if (matched != null)
                 {
                     result.Add(matched);
