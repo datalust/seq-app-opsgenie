@@ -12,22 +12,22 @@ namespace Seq.App.Opsgenie
     [SeqApp("Opsgenie Alerting", Description = "Send Opsgenie alerts using the HTTP API.")]
     public class OpsgenieApp : SeqApp, IDisposable, ISubscribeToAsync<LogEventData>
     {
-        private readonly List<Responder> _defaultResponders = new List<Responder>();
+        readonly List<Responder> _defaultResponders = new List<Responder>();
 
-        private readonly Dictionary<string, Priority> _priorities =
+        readonly Dictionary<string, Priority> _priorities =
             new Dictionary<string, Priority>(StringComparer.OrdinalIgnoreCase);
 
-        private readonly List<Responder> _responders = new List<Responder>();
-        private IDisposable _disposeClient;
-        private HandlebarsTemplate _generateMessage, _generateDescription;
-        private string _includeTagProperty;
-        private bool _includeTags;
-        private bool _isPriorityMapping;
-        private bool _isResponderMapping;
-        private Priority _priority = Priority.P3, _defaultPriority = Priority.P3;
-        private string _priorityProperty = "@Level";
-        private string _responderProperty;
-        private string[] _tags;
+        readonly List<Responder> _responders = new List<Responder>();
+        IDisposable _disposeClient;
+        HandlebarsTemplate _generateMessage, _generateDescription;
+        string _includeTagProperty;
+        bool _includeTags;
+        bool _isPriorityMapping;
+        bool _isResponderMapping;
+        Priority _priority = Priority.P3, _defaultPriority = Priority.P3;
+        string _priorityProperty = "@Level";
+        string _responderProperty;
+        string[] _tags;
 
         // Permits substitution for testing.
         internal IOpsgenieApiClient ApiClient { get; set; }
@@ -295,7 +295,7 @@ namespace Seq.App.Opsgenie
             _disposeClient = client;
         }
 
-        private List<Responder> ComputeResponders(Event<LogEventData> evt)
+        List<Responder> ComputeResponders(Event<LogEventData> evt)
         {
             if (!_isResponderMapping)
                 return _responders;
@@ -303,7 +303,7 @@ namespace Seq.App.Opsgenie
             var result = new List<Responder>();
 
             //Match the Responder property if configured
-            if (!TryGetPropertyValueCi(evt.Data.Properties, _responderProperty, out var responderValue)) return result;
+            if (!TryGetPropertyValueCI(evt.Data.Properties, _responderProperty, out var responderValue)) return result;
             switch (responderValue)
             {
                 case object[] responderArr:
@@ -336,10 +336,10 @@ namespace Seq.App.Opsgenie
             return result.Count.Equals(0) ? _defaultResponders : result;
         }
 
-        private string[] ComputeTags(Event<LogEventData> evt)
+        string[] ComputeTags(Event<LogEventData> evt)
         {
             if (!_includeTags ||
-                !TryGetPropertyValueCi(evt.Data.Properties, _includeTagProperty, out var tagArrValue) ||
+                !TryGetPropertyValueCI(evt.Data.Properties, _includeTagProperty, out var tagArrValue) ||
                 !(tagArrValue is object[] tagArr))
                 return _tags;
 
@@ -364,7 +364,7 @@ namespace Seq.App.Opsgenie
                 _priorities.TryGetValue(evt.Data.Level.ToString(), out var matched))
                 return matched;
 
-            if (TryGetPropertyValueCi(evt.Data.Properties, _priorityProperty, out var priorityProperty) &&
+            if (TryGetPropertyValueCI(evt.Data.Properties, _priorityProperty, out var priorityProperty) &&
                 priorityProperty is string priorityValue &&
                 _priorities.TryGetValue(priorityValue, out var matchedPriority))
                 return matchedPriority;
@@ -372,7 +372,7 @@ namespace Seq.App.Opsgenie
             return _defaultPriority;
         }
 
-        internal static bool TryGetPropertyValueCi(IReadOnlyDictionary<string, object> properties, string propertyName,
+        internal static bool TryGetPropertyValueCI(IReadOnlyDictionary<string, object> properties, string propertyName,
             out object propertyValue)
         {
             var pair = properties.FirstOrDefault(p => p.Key.Equals(propertyName, StringComparison.OrdinalIgnoreCase));
