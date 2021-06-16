@@ -51,13 +51,13 @@ namespace Seq.App.Opsgenie.Tests
                 ["b"] = new { }
             };
             
-            Assert.True(OpsgenieApp.TryGetPropertyValueCi(properties, "A", out var actual));
+            Assert.True(OpsgenieApp.TryGetPropertyValueCI(properties, "A", out var actual));
             Assert.Equal(expected, actual);
 
-            Assert.True(OpsgenieApp.TryGetPropertyValueCi(properties, "a", out actual));
+            Assert.True(OpsgenieApp.TryGetPropertyValueCI(properties, "a", out actual));
             Assert.Equal(expected, actual);
             
-            Assert.False(OpsgenieApp.TryGetPropertyValueCi(properties, "C", out _));
+            Assert.False(OpsgenieApp.TryGetPropertyValueCI(properties, "C", out _));
         }
 
         [Theory]
