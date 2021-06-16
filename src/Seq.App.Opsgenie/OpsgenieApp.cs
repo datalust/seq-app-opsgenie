@@ -195,7 +195,7 @@ namespace Seq.App.Opsgenie
                     else
                     {
                         Log.ForContext("Priority", _defaultPriority).Debug(
-                            "Cannot parse priority type in Priority configuration '{EventPriority}' - cannot add these priority mappings. Will use default of '{Priority}'",
+                            "Cannot parse priority type in Priority configuration '{EventPriority}' - cannot add these priority mappings; will use default of '{Priority}'",
                             EventPriority);
                         _priority = _defaultPriority;
                     }
@@ -233,12 +233,11 @@ namespace Seq.App.Opsgenie
 
             if (!string.IsNullOrEmpty(Responders))
             {
-                foreach (var responder in Responders.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(t => t.Trim()))
+                foreach (var responder in SplitAndTrim(',', Responders))
+                {
                     if (responder.Contains("="))
                     {
-                        var r = responder.Split(new[] {'='}, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(t => t.Trim()).ToArray();
+                        var r = SplitAndTrim('=', responder).ToArray();
                         if (Enum.TryParse(r[1], true, out ResponderType responderType))
                             _responders.Add(responderType == ResponderType.User
                                 ? new Responder {Username = r[0], Type = responderType}
@@ -253,6 +252,7 @@ namespace Seq.App.Opsgenie
                         //Unmatched Name=Type defaults to Team
                         _responders.Add(new Responder {Name = responder, Type = ResponderType.Team});
                     }
+                }
 
                 Log.ForContext("Responders", _responders, true)
                     .Debug(_isResponderMapping ? "Responder Mappings: {Responders}" : "Responders: {Responders}");
@@ -266,8 +266,7 @@ namespace Seq.App.Opsgenie
             if (_isResponderMapping && !string.IsNullOrEmpty(DefaultResponders))
             {
                 _defaultResponders.AddRange(
-                    from r in DefaultResponders.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(t => t.Trim()).ToArray()
+                    from r in SplitAndTrim(',', DefaultResponders)
                     from p in _responders
                     where r.Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
                           r.Equals(p.Username, StringComparison.OrdinalIgnoreCase)
@@ -277,10 +276,7 @@ namespace Seq.App.Opsgenie
                     .Debug("Default Responders: {DefaultResponders}");
             }
 
-            _tags = (Tags ?? "")
-                .Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                .Select(t => t.Trim())
-                .ToArray();
+            _tags = SplitAndTrim(',', Tags ?? "").ToArray();
 
             _includeTags = AddEventTags;
             _includeTagProperty = "Tags";
@@ -315,8 +311,7 @@ namespace Seq.App.Opsgenie
                     break;
                 case string responder when responder.Contains(","):
                     result.AddRange(
-                        from r in responder.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(t => t.Trim()).ToArray()
+                        from r in SplitAndTrim(',', responder)
                         from p in _responders
                         where r.Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
                               r.Equals(p.Username, StringComparison.OrdinalIgnoreCase)
@@ -349,7 +344,7 @@ namespace Seq.App.Opsgenie
                 if (!(p is string tags))
                     continue;
 
-                result.UnionWith(tags.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries).Select(t => t.Trim()));
+                result.UnionWith(SplitAndTrim(',', tags));
             }
 
             return result.ToArray();
@@ -390,16 +385,22 @@ namespace Seq.App.Opsgenie
         {
             if (encodedMappings == null) throw new ArgumentNullException(nameof(encodedMappings));
             mappings = new Dictionary<string, Priority>(StringComparer.OrdinalIgnoreCase);
-            var pairs = encodedMappings.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
+            var pairs = SplitAndTrim(',', encodedMappings);
             foreach (var pair in pairs)
             {
-                var kv = pair.Split(new[] {'='}, StringSplitOptions.RemoveEmptyEntries);
+                var kv = SplitAndTrim('=', pair).ToArray();
                 if (kv.Length != 2 || !Enum.TryParse(kv[1], true, out Priority value)) return false;
 
-                mappings.Add(kv[0].Trim(), value);
+                mappings.Add(kv[0], value);
             }
 
             return true;
+        }
+        
+        static IEnumerable<string> SplitAndTrim(char splitOn, string setting)
+        {
+            return setting.Split(new[] {splitOn}, StringSplitOptions.RemoveEmptyEntries)
+                .Select(t => t.Trim());
         }
     }
 }
