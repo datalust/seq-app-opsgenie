@@ -3,7 +3,7 @@
     "Run": {
       "commandName": "Executable",
       "executablePath": "seqcli",
-      "commandLineArgs": "app run -d $(TargetDir)"
+      "commandLineArgs": "app run -d $(TargetDir) -p ApiKey=thisisatest"
     }
   }
 }
