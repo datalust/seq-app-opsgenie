@@ -49,6 +49,7 @@ namespace Seq.App.Opsgenie
         [SeqAppSetting(
             IsOptional = true,
             DisplayName = "Alert description",
+            InputType = SettingInputType.LongText,
             HelpText =
                 "The description associated with the alert, specified with Handlebars syntax. If blank, a default" +
                 " description will be used.")]
