@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Seq.App.Opsgenie.Tests.Support
@@ -8,10 +9,10 @@ namespace Seq.App.Opsgenie.Tests.Support
         public List<OpsgenieAlert> CreatedAlerts { get; } = new List<OpsgenieAlert>();
 
 
-        public Task CreateAsync(OpsgenieAlert alert)
+        public Task<HttpResponseMessage> CreateAsync(OpsgenieAlert alert)
         {
             CreatedAlerts.Add(alert);
-            return Task.CompletedTask;
+            return (Task<HttpResponseMessage>)Task.CompletedTask;
         }
     }
 }
