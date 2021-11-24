@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Seq.App.Opsgenie.Classes;
+using Seq.App.Opsgenie.Interfaces;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
 
@@ -24,12 +26,12 @@ namespace Seq.App.Opsgenie
         bool _includeTags;
         bool _isPriorityMapping;
         bool _isResponderMapping;
+        DateTime _lastAlert;
         Priority _priority = Priority.P3, _defaultPriority = Priority.P3;
         string _priorityProperty = "@Level";
         string _responderProperty;
-        string[] _tags;
         TimeSpan _suppressionTime;
-        DateTime _lastAlert;
+        string[] _tags;
 
         // Permits substitution for testing.
         internal IOpsgenieApiClient ApiClient { get; set; }
@@ -140,12 +142,13 @@ namespace Seq.App.Opsgenie
             if (evt == null) throw new ArgumentNullException(nameof(evt));
             var suppressDiff = DateTime.UtcNow - _lastAlert;
             if (suppressDiff.TotalSeconds < _suppressionTime.TotalSeconds) return;
-            
+
             var message = _generateMessage.Render(evt);
             var description = _generateDescription.Render(evt);
             var priority = ComputePriority(evt);
             var tags = ComputeTags(evt);
             var responders = ComputeResponders(evt);
+            var notification = Guid.NewGuid().ToString("n");
 
             var alert = new OpsgenieAlert(
                 message,
@@ -153,20 +156,44 @@ namespace Seq.App.Opsgenie
                 description,
                 priority.ToString(),
                 responders,
+                new Dictionary<string, string>
+                {
+                    {"Seq Host Name", Host.InstanceName},
+                    {"Seq Host URL", Host.BaseUri},
+                    {"Seq App Instance", App.Title},
+                    {"Seq App Instance Id", App.Id},
+                    {"Seq ID", evt.Id},
+                    {
+                        "Seq URL",
+                        !string.IsNullOrEmpty(evt.Id) && !string.IsNullOrEmpty(Host.BaseUri)
+                            ? string.Concat(Host.BaseUri, "#/events?filter=@Id%20%3D%20'", evt.Id,
+                                "'&amp;show=expanded")
+                            : ""
+                    },
+                    {"Seq Timestamp UTC", evt.TimestampUtc.ToString("O")},
+                    {"Seq Event Type", evt.EventType.ToString()},
+                    {"Seq Notification Id", notification}
+                },
                 Host.BaseUri,
                 tags);
 
-            var log = Log.ForContext("Notification", Guid.NewGuid().ToString("n"));
+            var log = Log.ForContext("Notification", notification);
+            var result = new OpsGenieResult();
+
             try
             {
                 // Log our intent to alert OpsGenie with details that could be re-fired to another app if needed
-                log.ForContext("Alert", alert, true)
+                log.ForContext("Alert", alert, destructureObjects: true)
                     .Debug("Sending alert to OpsGenie API");
 
-                var result = await ApiClient.CreateAsync(alert);
+                result = await ApiClient.CreateAsync(alert);
 
                 //Log the result with details that could be re-fired to another app if needed
-                log.Debug("OpsGenie API responded {Result}/{Reason}", result.StatusCode, result.ReasonPhrase);
+                log
+                    .ForContext("Alert", alert, destructureObjects: true)
+                    .ForContext("Result", result, destructureObjects: true)
+                    .Debug("OpsGenie API responded with {Response}: {ResultCode}/{Reason}", result.Response.Result,
+                        result.HttpResponse.StatusCode, result.HttpResponse.ReasonPhrase);
                 _lastAlert = DateTime.UtcNow;
             }
 
@@ -174,7 +201,8 @@ namespace Seq.App.Opsgenie
             {
                 //Log an error which could be fired to another app (eg. alert via email of an OpsGenie alert failure, or raise a Jira) and include details of the alert
                 log
-                    .ForContext("Alert", alert, true)
+                    .ForContext("Alert", alert, destructureObjects: true)
+                    .ForContext("Result", result, destructureObjects: true)
                     .Error(ex, "OpsGenie alert creation failed");
             }
         }
@@ -197,7 +225,8 @@ namespace Seq.App.Opsgenie
                 _priorityProperty = PriorityProperty;
 
             if (!string.IsNullOrEmpty(DefaultPriority) &&
-                Enum.TryParse(DefaultPriority, true, out Priority defaultPriority)) _defaultPriority = defaultPriority;
+                Enum.TryParse(DefaultPriority, ignoreCase: true, out Priority defaultPriority))
+                _defaultPriority = defaultPriority;
 
             switch (string.IsNullOrEmpty(EventPriority))
             {
@@ -208,7 +237,8 @@ namespace Seq.App.Opsgenie
                         _isPriorityMapping = true;
                         foreach (var mapping in mappings)
                             _priorities.Add(mapping.Key, mapping.Value);
-                        Log.ForContext("Priority", _priorities, true).Debug("Priority Mappings: {Priority}");
+                        Log.ForContext("Priority", _priorities, destructureObjects: true)
+                            .Debug("Priority Mappings: {Priority}");
                     }
                     else
                     {
@@ -220,7 +250,7 @@ namespace Seq.App.Opsgenie
 
                     break;
                 }
-                case false when Enum.TryParse(EventPriority, true, out Priority singlePriority):
+                case false when Enum.TryParse(EventPriority, ignoreCase: true, out Priority singlePriority):
                     _priority = singlePriority;
                     Log.ForContext("Priority", _priority).Debug("Priority: {Priority}");
                     break;
@@ -251,12 +281,11 @@ namespace Seq.App.Opsgenie
 
             if (!string.IsNullOrEmpty(Responders))
             {
-                foreach (var responder in SplitAndTrim(',', Responders))
-                {
+                foreach (var responder in SplitAndTrim(splitOn: ',', Responders))
                     if (responder.Contains("="))
                     {
-                        var r = SplitAndTrim('=', responder).ToArray();
-                        if (Enum.TryParse(r[1], true, out ResponderType responderType))
+                        var r = SplitAndTrim(splitOn: '=', responder).ToArray();
+                        if (Enum.TryParse(r[1], ignoreCase: true, out ResponderType responderType))
                             _responders.Add(responderType == ResponderType.User
                                 ? new Responder {Username = r[0], Type = responderType}
                                 : new Responder {Name = r[0], Type = responderType});
@@ -270,9 +299,8 @@ namespace Seq.App.Opsgenie
                         //Unmatched Name=Type defaults to Team
                         _responders.Add(new Responder {Name = responder, Type = ResponderType.Team});
                     }
-                }
 
-                Log.ForContext("Responders", _responders, true)
+                Log.ForContext("Responders", _responders, destructureObjects: true)
                     .Debug(_isResponderMapping ? "Responder Mappings: {Responders}" : "Responders: {Responders}");
             }
             else
@@ -284,17 +312,17 @@ namespace Seq.App.Opsgenie
             if (_isResponderMapping && !string.IsNullOrEmpty(DefaultResponders))
             {
                 _defaultResponders.AddRange(
-                    from r in SplitAndTrim(',', DefaultResponders)
+                    from r in SplitAndTrim(splitOn: ',', DefaultResponders)
                     from p in _responders
                     where r.Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
                           r.Equals(p.Username, StringComparison.OrdinalIgnoreCase)
                     select p);
 
-                Log.ForContext("DefaultResponders", _defaultResponders, true)
+                Log.ForContext("DefaultResponders", _defaultResponders, destructureObjects: true)
                     .Debug("Default Responders: {DefaultResponders}");
             }
 
-            _tags = SplitAndTrim(',', Tags ?? "").ToArray();
+            _tags = SplitAndTrim(splitOn: ',', Tags ?? "").ToArray();
 
             _includeTags = AddEventTags;
             _includeTagProperty = "Tags";
@@ -329,7 +357,7 @@ namespace Seq.App.Opsgenie
                     break;
                 case string responder when responder.Contains(","):
                     result.AddRange(
-                        from r in SplitAndTrim(',', responder)
+                        from r in SplitAndTrim(splitOn: ',', responder)
                         from p in _responders
                         where r.Equals(p.Name, StringComparison.OrdinalIgnoreCase) ||
                               r.Equals(p.Username, StringComparison.OrdinalIgnoreCase)
@@ -346,7 +374,7 @@ namespace Seq.App.Opsgenie
                 }
             }
 
-            return result.Count.Equals(0) ? _defaultResponders : result;
+            return result.Count.Equals(obj: 0) ? _defaultResponders : result;
         }
 
         string[] ComputeTags(Event<LogEventData> evt)
@@ -362,7 +390,7 @@ namespace Seq.App.Opsgenie
                 if (!(p is string tags))
                     continue;
 
-                result.UnionWith(SplitAndTrim(',', tags));
+                result.UnionWith(SplitAndTrim(splitOn: ',', tags));
             }
 
             return result.ToArray();
@@ -403,18 +431,18 @@ namespace Seq.App.Opsgenie
         {
             if (encodedMappings == null) throw new ArgumentNullException(nameof(encodedMappings));
             mappings = new Dictionary<string, Priority>(StringComparer.OrdinalIgnoreCase);
-            var pairs = SplitAndTrim(',', encodedMappings);
+            var pairs = SplitAndTrim(splitOn: ',', encodedMappings);
             foreach (var pair in pairs)
             {
-                var kv = SplitAndTrim('=', pair).ToArray();
-                if (kv.Length != 2 || !Enum.TryParse(kv[1], true, out Priority value)) return false;
+                var kv = SplitAndTrim(splitOn: '=', pair).ToArray();
+                if (kv.Length != 2 || !Enum.TryParse(kv[1], ignoreCase: true, out Priority value)) return false;
 
                 mappings.Add(kv[0], value);
             }
 
             return true;
         }
-        
+
         static IEnumerable<string> SplitAndTrim(char splitOn, string setting)
         {
             return setting.Split(new[] {splitOn}, StringSplitOptions.RemoveEmptyEntries)

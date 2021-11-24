@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Seq.App.Opsgenie.Classes;
 using Seq.App.Opsgenie.Tests.Support;
 using Seq.Apps.LogEvents;
 using Xunit;
