@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Seq.App.Opsgenie.Classes;
 using Seq.App.Opsgenie.Tests.Support;
 using Xunit;
 
