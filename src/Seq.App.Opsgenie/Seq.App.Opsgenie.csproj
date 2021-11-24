@@ -16,7 +16,7 @@
         <PackageIcon>opsgenie.png</PackageIcon>
         <ApplicationIcon>opsgenie.ico</ApplicationIcon>
       <PackageId>Seq.App.Opsgenie</PackageId>
-      <Product>Seq.App.Opsgenie2</Product>
+      <Product>Seq.App.Opsgenie</Product>
     </PropertyGroup>
     
     <ItemGroup>
