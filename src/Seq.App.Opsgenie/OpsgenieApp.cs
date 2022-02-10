@@ -146,7 +146,7 @@ namespace Seq.App.Opsgenie
             var message = _generateMessage.Render(evt);
             var description = _generateDescription.Render(evt);
             var priority = ComputePriority(evt);
-            var tags = ComputeTags(evt);
+            var tags = ComputeTags(evt, _includeTags, _includeTagProperty, _tags);
             var responders = ComputeResponders(evt);
             var notification = Guid.NewGuid().ToString("n");
 
@@ -377,14 +377,21 @@ namespace Seq.App.Opsgenie
             return result.Count.Equals(obj: 0) ? _defaultResponders : result;
         }
 
-        string[] ComputeTags(Event<LogEventData> evt)
+        internal static string[] ComputeTags(Event<LogEventData> evt, bool includeTags, string includeTagProperty, string[] tagValues)
         {
-            if (!_includeTags ||
-                !TryGetPropertyValueCI(evt.Data.Properties, _includeTagProperty, out var tagArrValue) ||
-                !(tagArrValue is object[] tagArr))
-                return _tags;
+            if (!includeTags ||
+                !TryGetPropertyValueCI(evt.Data.Properties, includeTagProperty, out var tagArrValue))
+                return tagValues;
 
-            var result = new HashSet<string>(_tags, StringComparer.OrdinalIgnoreCase);
+            string[] tagArr;
+            if (tagArrValue is string[] value)
+                tagArr = value;
+            else if (tagArrValue is string arrValue)
+                tagArr = SplitAndTrim(',', arrValue).ToArray();
+            else
+                return tagValues;
+
+            var result = new HashSet<string>(tagValues, StringComparer.OrdinalIgnoreCase);
             foreach (var p in tagArr)
             {
                 if (!(p is string tags))

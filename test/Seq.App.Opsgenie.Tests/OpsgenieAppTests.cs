@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Seq.App.Opsgenie.Classes;
 using Seq.App.Opsgenie.Tests.Support;
@@ -43,13 +44,36 @@ namespace Seq.App.Opsgenie.Tests
         }
 
         [Fact]
+        public void TagsCorrectlyMapped()
+        {
+            var expectedTag = new[] { "Test", "Comma", "Delimited" };
+
+            using var app = new OpsgenieApp
+            {
+                ApiClient = new TestOpsgenieApiClient(),
+                DefaultPriority = Priority.P2.ToString(),
+            };
+
+            var evt = Some.LogEvent(
+                include: new Dictionary<string, object> { { "Tags", new[] { "Test", "Comma", "Delimited" } } });
+            Assert.Equal(expectedTag, OpsgenieApp.ComputeTags(evt, true, "Tags", Array.Empty<string>()));
+
+            evt = Some.LogEvent(include: new Dictionary<string, object> {{"Tags", "Test,Comma,Delimited"}});
+
+            Assert.Equal(expectedTag, OpsgenieApp.ComputeTags(evt, true, "Tags", Array.Empty<string>()));
+
+
+        }
+
+        [Fact]
         public void TryGetPropertyValueCIMatchesCaseInsensitivePropertyNames()
         {
             var expected = new { };
             var properties = new Dictionary<string, object>
             {
                 ["A"] = expected,
-                ["b"] = new { }
+                ["b"] = new { },
+                ["Tags"] = "Test,Comma,Delimited"
             };
             
             Assert.True(OpsgenieApp.TryGetPropertyValueCI(properties, "A", out var actual));
