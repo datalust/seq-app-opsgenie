@@ -7,6 +7,8 @@ using Seq.App.Opsgenie.Interfaces;
 using Seq.Apps;
 using Seq.Apps.LogEvents;
 
+// ReSharper disable StructuredMessageTemplateProblem
+
 // ReSharper disable MemberCanBePrivate.Global, UnusedType.Global, UnusedAutoPropertyAccessor.Global
 
 namespace Seq.App.Opsgenie
@@ -337,7 +339,7 @@ namespace Seq.App.Opsgenie
             _disposeClient = client;
         }
 
-        List<Responder> ComputeResponders(Event<LogEventData> evt)
+        public List<Responder> ComputeResponders(Event<LogEventData> evt)
         {
             if (!_isResponderMapping)
                 return _responders;
@@ -377,7 +379,8 @@ namespace Seq.App.Opsgenie
             return result.Count.Equals(obj: 0) ? _defaultResponders : result;
         }
 
-        internal static string[] ComputeTags(Event<LogEventData> evt, bool includeTags, string includeTagProperty, string[] tagValues)
+        internal static string[] ComputeTags(Event<LogEventData> evt, bool includeTags, string includeTagProperty,
+            string[] tagValues)
         {
             if (!includeTags ||
                 !TryGetPropertyValueCI(evt.Data.Properties, includeTagProperty, out var tagArrValue))
@@ -387,7 +390,7 @@ namespace Seq.App.Opsgenie
             if (tagArrValue is string[] value)
                 tagArr = value;
             else if (tagArrValue is string arrValue)
-                tagArr = SplitAndTrim(',', arrValue).ToArray();
+                tagArr = SplitAndTrim(splitOn: ',', arrValue).ToArray();
             else
                 return tagValues;
 

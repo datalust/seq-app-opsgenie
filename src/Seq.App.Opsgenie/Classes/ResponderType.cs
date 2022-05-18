@@ -3,7 +3,7 @@
 
 namespace Seq.App.Opsgenie.Classes
 {
-    enum ResponderType
+    public enum ResponderType
     {
         Team,
         User,
