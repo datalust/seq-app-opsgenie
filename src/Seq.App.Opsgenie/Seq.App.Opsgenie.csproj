@@ -17,7 +17,6 @@
     <ApplicationIcon>opsgenie.ico</ApplicationIcon>
     <PackageId>Seq.App.Opsgenie</PackageId>
     <Product>Seq.App.Opsgenie</Product>
-    <Version>1.0.1</Version>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
