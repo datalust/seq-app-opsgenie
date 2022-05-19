@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace Seq.App.Opsgenie.Classes
+namespace Seq.App.Opsgenie.Api
 {
     public class Responder
     {

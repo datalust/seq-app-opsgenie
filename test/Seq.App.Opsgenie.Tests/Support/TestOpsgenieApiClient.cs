@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Seq.App.Opsgenie.Api;
 using Seq.App.Opsgenie.Classes;
-using Seq.App.Opsgenie.Interfaces;
+using Seq.App.Opsgenie.Client;
 
 namespace Seq.App.Opsgenie.Tests.Support
 {

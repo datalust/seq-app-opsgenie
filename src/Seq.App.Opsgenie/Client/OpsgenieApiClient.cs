@@ -6,10 +6,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using Seq.App.Opsgenie.Classes;
-using Seq.App.Opsgenie.Interfaces;
+using Seq.App.Opsgenie.Api;
 
-namespace Seq.App.Opsgenie
+namespace Seq.App.Opsgenie.Client
 {
     class OpsgenieApiClient : IOpsgenieApiClient, IDisposable
     {

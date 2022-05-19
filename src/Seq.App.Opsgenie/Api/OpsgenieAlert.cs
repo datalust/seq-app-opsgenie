@@ -3,7 +3,7 @@
 // Properties on this type are serialized into the JSON payload sent to OpsGenie.
 // ReSharper disable MemberCanBePrivate.Global, UnusedAutoPropertyAccessor.Global
 
-namespace Seq.App.Opsgenie.Classes
+namespace Seq.App.Opsgenie.Api
 {
     class OpsgenieAlert
     {

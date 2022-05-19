@@ -6,7 +6,7 @@
 
 // ReSharper disable ClassNeverInstantiated.Global
 
-namespace Seq.App.Opsgenie.Classes
+namespace Seq.App.Opsgenie.Api
 {
     public class OpsGenieData
     {

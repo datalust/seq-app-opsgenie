@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Seq.App.Opsgenie.Classes;
+using Seq.App.Opsgenie.Api;
 
-namespace Seq.App.Opsgenie.Interfaces
+namespace Seq.App.Opsgenie.Client
 {
     interface IOpsgenieApiClient
     {

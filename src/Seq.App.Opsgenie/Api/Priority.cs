@@ -1,7 +1,7 @@
 ﻿// Values of this type are populated from user-provided configuration.
 // ReSharper disable UnusedMember.Global
 
-namespace Seq.App.Opsgenie.Classes
+namespace Seq.App.Opsgenie.Api
 {
     public enum Priority
     {
