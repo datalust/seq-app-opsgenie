@@ -24,8 +24,6 @@ namespace Seq.App.Opsgenie.Tests.Support
             return Uint();
         }
 
-        public abstract class ParametersMustBeNamed { }
-        
         public static Event<LogEventData> LogEvent(
             ParametersMustBeNamed _ = null,
             LogEventLevel level = LogEventLevel.Fatal,
@@ -40,12 +38,8 @@ namespace Seq.App.Opsgenie.Tests.Support
             };
 
             if (include != null)
-            {
                 foreach (var includedProperty in include)
-                {
                     properties.Add(includedProperty.Key, includedProperty.Value);
-                }
-            }
 
             return new Event<LogEventData>(id, EventType(), timestamp, new LogEventData
             {
@@ -71,7 +65,11 @@ namespace Seq.App.Opsgenie.Tests.Support
 
         public static Host Host()
         {
-            return new Host("https://seq.example.com", String() );
+            return new Host("https://seq.example.com", String());
+        }
+
+        public abstract class ParametersMustBeNamed
+        {
         }
     }
 }

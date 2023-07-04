@@ -1,33 +1,34 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>netstandard2.0</TargetFramework>
-        <VersionPrefix>1.0.1</VersionPrefix>
-        <Description>Create Opsgenie alerts in response to events or alert notifications in Seq.</Description>
-        <Authors>Datalust and Contributors</Authors>
-        <PackageTags>seq-app</PackageTags>
-        <PackageProjectUrl>https://github.com/datalust/seq-app-opsgenie</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/datalust/seq-app-opsgenie</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-        <TreatSpecificWarningsAsErrors />
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <AssemblyName>Seq.App.Opsgenie</AssemblyName>
-        <PackageIcon>opsgenie.png</PackageIcon>
-        <ApplicationIcon>opsgenie.ico</ApplicationIcon>
-      <PackageId>Seq.App.Opsgenie</PackageId>
-      <Product>Seq.App.Opsgenie2</Product>
-    </PropertyGroup>
-    
-    <ItemGroup>
-      <PackageReference Include="Handlebars.Net" Version="2.0.9" />
-      <PackageReference Include="Seq.Apps" Version="5.1.0" />
-      <PackageReference Include="system.text.json" Version="5.0.2" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <None Include="../../LICENSE" Pack="true" PackagePath="" />
-        <None Include="..\..\opsgenie.png" Pack="true" PackagePath="" />
-        <None Include="./obj/publish/**/*" Exclude="./obj/publish/$(MSBuildProjectName).dll;./obj/publish/Seq.Apps.dll;./obj/publish/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <VersionPrefix>1.0.1</VersionPrefix>
+    <Description>Create Opsgenie alerts in response to events or alert notifications in Seq.</Description>
+    <Authors>Datalust and Contributors</Authors>
+    <PackageTags>seq-app</PackageTags>
+    <PackageProjectUrl>https://github.com/datalust/seq-app-opsgenie</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/datalust/seq-app-opsgenie</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatSpecificWarningsAsErrors />
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>Seq.App.Opsgenie</AssemblyName>
+    <PackageIcon>opsgenie.png</PackageIcon>
+    <ApplicationIcon>opsgenie.ico</ApplicationIcon>
+    <PackageId>Seq.App.Opsgenie</PackageId>
+    <Product>Seq.App.Opsgenie</Product>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Handlebars.Net" Version="2.1.4" />
+    <PackageReference Include="Seq.Apps" Version="2021.4.0" />
+    <PackageReference Include="system.text.json" Version="7.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\..\opsgenie.png" Pack="true" PackagePath="" />
+    <None Include="./obj/publish/**/*" Exclude="./obj/publish/$(MSBuildProjectName).dll;./obj/publish/Seq.Apps.dll;./obj/publish/Serilog.dll" Pack="true" PackagePath="lib/$(TargetFramework)" />
+  </ItemGroup>
 </Project>

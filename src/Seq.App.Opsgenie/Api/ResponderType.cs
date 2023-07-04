@@ -1,9 +1,9 @@
 ﻿// Used to maintain the (JSON) OpsGenie API contract.
 // ReSharper disable UnusedMember.Global
 
-namespace Seq.App.Opsgenie
+namespace Seq.App.Opsgenie.Api
 {
-    enum ResponderType
+    public enum ResponderType
     {
         Team,
         User,
